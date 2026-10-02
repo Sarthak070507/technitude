@@ -1,0 +1,16 @@
+{
+  "name": "tech-treasure",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^18.0.5",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.3",
+    "qrcode": "^1.5.4"
+  }
+}

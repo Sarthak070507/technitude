@@ -1,0 +1,18 @@
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+const canvas=document.getElementById("scene"),scene=new THREE.Scene();
+scene.background=new THREE.Color(0x06131d);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,1000);camera.position.set(0,2,9);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+scene.add(new THREE.AmbientLight(0x8bbbd0,2));
+const moon=new THREE.Mesh(new THREE.SphereGeometry(1.2,32,32),new THREE.MeshStandardMaterial({color:0xffd77a,emissive:0x6b4315,emissiveIntensity:.4}));moon.position.set(4,3,-4);scene.add(moon);
+const ship=new THREE.Group();
+const hull=new THREE.Mesh(new THREE.BoxGeometry(3,.45,1),new THREE.MeshStandardMaterial({color:0x6b351c}));hull.position.y=-.3;ship.add(hull);
+const mast=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,2.8,12),new THREE.MeshStandardMaterial({color:0x8b6a3d}));mast.position.y=1;ship.add(mast);
+const sail=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.9),new THREE.MeshStandardMaterial({color:0xf0e0b5,side:THREE.DoubleSide}));sail.position.set(.45,1.1,0);ship.add(sail);
+ship.position.set(0,-1,-2);scene.add(ship);
+const water=new THREE.Mesh(new THREE.PlaneGeometry(40,40,40,40),new THREE.MeshStandardMaterial({color:0x0b4054,roughness:.25,metalness:.1,transparent:true,opacity:.85}));water.rotation.x=-Math.PI/2;water.position.y=-2;scene.add(water);
+const pts=[];for(let i=0;i<400;i++)pts.push((Math.random()-.5)*30,Math.random()*12-3,(Math.random()-.5)*25);
+const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.Float32BufferAttribute(pts,3));
+scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0xffd98a,size:.035})));
+function animate(t){requestAnimationFrame(animate);ship.rotation.y=Math.sin(t*.0005)*.08;ship.position.y=-1+Math.sin(t*.001)*.12;renderer.render(scene,camera)}animate(0);
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
