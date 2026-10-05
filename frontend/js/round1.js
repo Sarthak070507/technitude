@@ -1,80 +1,264 @@
 const sid=new URLSearchParams(location.search).get("session");
 const $=id=>document.getElementById(id);
-let logos=[],index=0,session=null,serverOffset=0,penalty=0,displayInterval=null;
+let logos=[],index=0,session=null,ending=false;
 
-function syncServer(iso){serverOffset=new Date(iso).getTime()-Date.now()}
-function now(){return Date.now()+serverOffset}
-function elapsed(start){return Math.max(0,(now()-new Date(start).getTime())/1000)}
-function fmt(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=Math.floor(sec%60),d=Math.floor((sec-Math.floor(sec))*10);return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${d}`}
-function updateTimer(){
- if(!session?.round1StartedAt)return;
- $("timer").textContent=fmt(elapsed(session.round1StartedAt)+penalty);
-}
 async function getSession(){
- const r=await fetch(`/api/session/${encodeURIComponent(sid)}`,{cache:"no-store"});
- const d=await r.json();if(!r.ok)throw Error(d.error);syncServer(d.serverNow);return d;
+    const r=await fetch(`/api/session/${encodeURIComponent(sid)}`,{cache:"no-store"});
+    if(!r.ok)throw Error("Crew session not found");
+    return r.json();
 }
+
+function currentTime(){
+    return GameTimer.elapsed(session.round1StartedAt)+Number(session.round1Penalty||0);
+}
+
+function render(){
+    const seconds=Math.min(600,currentTime());
+    $("timer").textContent=GameTimer.format(seconds);
+    $("penalty").textContent=`Penalties: +${Number(session.round1Penalty||0)}s • Skips: ${session.round1SkipCount||0}/2`;
+}
+
+async function init(){
+    if(!sid){
+        $("msg").textContent="Missing crew session.";
+        return;
+    }
+
+    try{
+        session=await getSession();
+
+        GameTimer.sync(session.serverNow);
+
+        $("team").textContent=`Crew: ${session.crewName}`;
+
+        if(
+            session.status==="round2"||
+            session.status==="round2_complete"||
+            session.status==="round3"||
+            session.status==="completed"
+        ){
+            location.href=`round2.html?session=${encodeURIComponent(sid)}`;
+            return;
+        }
+
+        if(session.round1StartedAt){
+            const r=await fetch(
+                `/api/round1/logos?sessionId=${encodeURIComponent(sid)}`
+            );
+
+            const d=await r.json();
+
+            if(!r.ok)throw Error(d.error);
+
+            logos=d.logos;
+
+            index=Math.min(
+                Number(session.round1AnsweredCount||0),
+                logos.length-1
+            );
+
+            $("start").hidden=true;
+            $("game").hidden=false;
+
+            show();
+
+            GameTimer.start(render);
+        }
+    }catch(e){
+        $("msg").textContent=e.message;
+    }
+}
+
+$("start").onclick=async()=>{
+    const r=await fetch("/api/round1/start",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            sessionId:sid
+        })
+    });
+
+    const d=await r.json();
+
+    if(!r.ok){
+        $("msg").textContent=d.error;
+        return;
+    }
+
+    GameTimer.sync(d.session.serverNow);
+
+    session=d.session;
+    logos=d.logos;
+    index=0;
+
+    $("start").hidden=true;
+    $("game").hidden=false;
+
+    show();
+
+    GameTimer.start(render);
+};
+
 function show(){
- if(index>=logos.length){finish();return}
- $("progress").textContent=`LOGO ${index+1} / ${logos.length}`;
- $("logo").src=logos[index].image;
- $("answer").value="";$("answer").focus();
+    const x=logos[index];
+
+    if(!x)return;
+
+    $("logo").src=x.image;
+
+    $("progress").textContent=`Logo ${index+1} of ${logos.length}`;
+
+    $("answer").value="";
+    $("msg").textContent="";
+
+    $("answer").focus();
 }
-async function start(){
- $("start").disabled=true;$("msg").textContent="Starting...";
- try{
-  const r=await fetch("/api/round1/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid})});
-  const d=await r.json();if(!r.ok)throw Error(d.error);
-  session=d.session;syncServer(d.session.serverNow);logos=d.logos;index=0;penalty=0;
-  $("start").hidden=true;$("game").hidden=false;$("team").textContent=session.teamName;show();updateTimer();
-  clearInterval(displayInterval);displayInterval=setInterval(updateTimer,100);
- }catch(e){$("msg").textContent=e.message;$("start").disabled=false}
+
+async function moveAfterAction(){
+    session=await getSession();
+
+    if(
+        session.status==="round2"||
+        session.status==="round2_complete"||
+        session.status==="round3"||
+        session.status==="completed"
+    ){
+        ending=true;
+
+        GameTimer.stop();
+
+        location.href=`round2.html?session=${encodeURIComponent(sid)}`;
+
+        return;
+    }
+
+    index++;
+
+    show();
 }
-async function resume(){
- try{
-  session=await getSession();$("team").textContent=session.teamName;penalty=Number(session.round1Penalty||0);
-  if(session.status==="registered"){return}
-  if(session.status==="round1"){
-   logos=(await (await fetch(`/api/round1/logos?sessionId=${encodeURIComponent(sid)}`)).json()).logos;
-   index=Number(session.round1AnsweredCount||0);
-   $("start").hidden=true;$("game").hidden=false;show();updateTimer();
-   clearInterval(displayInterval);displayInterval=setInterval(updateTimer,100);
-  }else if(["round1_complete","round2","round2_complete","round3","completed"].includes(session.status)){
-   location.href=`round2.html?session=${encodeURIComponent(sid)}`;
-  }
- }catch(e){$("msg").textContent=e.message}
+
+$("submit").onclick=async()=>{
+    if(ending)return;
+
+    const answer=$("answer").value.trim();
+
+    if(!answer)return;
+
+    const r=await fetch("/api/round1/answer",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            sessionId:sid,
+            logoNo:logos[index].id,
+            answer
+        })
+    });
+
+    const d=await r.json();
+
+    if(!r.ok){
+        $("msg").textContent=d.error;
+        return;
+    }
+
+    if(d.correct){
+        $("msg").textContent="Correct! Next logo...";
+
+        await moveAfterAction();
+    }else if(d.attemptNo===1){
+        session.round1Penalty=
+            Number(session.round1Penalty||0)+5;
+
+        $("msg").textContent=
+            "Wrong answer. +5 seconds. One more attempt.";
+
+        render();
+    }else{
+        session.round1Penalty=
+            Number(session.round1Penalty||0)+10;
+
+        $("msg").textContent=
+            "Second wrong answer. +10 seconds. Moving on...";
+
+        await moveAfterAction();
+    }
+};
+
+$("skip").onclick=async()=>{
+    if(ending)return;
+
+    const r=await fetch("/api/round1/skip",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            sessionId:sid,
+            logoNo:logos[index].id
+        })
+    });
+
+    const d=await r.json();
+
+    if(!r.ok){
+        $("msg").textContent=d.error;
+        return;
+    }
+
+    session.round1Penalty=d.totalPenalty;
+    session.round1SkipCount=d.skipCount;
+
+    render();
+
+    $("msg").textContent="Skipped. +20 seconds.";
+
+    await moveAfterAction();
+};
+
+async function checkTimeLimit(){
+    if(
+        ending||
+        !session||
+        !session.round1StartedAt
+    )return;
+
+    if(GameTimer.elapsed(session.round1StartedAt)>=600){
+        ending=true;
+
+        GameTimer.stop();
+
+        const r=await fetch("/api/round1/timeout",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                sessionId:sid
+            })
+        });
+
+        const d=await r.json();
+
+        if(r.ok){
+            location.href=`round2.html?session=${encodeURIComponent(sid)}`;
+        }else{
+            $("msg").textContent=d.error;
+            ending=false;
+            GameTimer.start(render);
+        }
+    }
 }
-async function submitAnswer(){
- const answer=$("answer").value.trim();if(!answer)return;
- $("submit").disabled=true;
- try{
-  const r=await fetch("/api/round1/answer",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid,logoNo:logos[index].id,answer})});
-  const d=await r.json();if(!r.ok)throw Error(d.error);
-  if(!d.correct){$("msg").textContent="Wrong answer. Try again.";$("submit").disabled=false;return}
-  index=d.count;session=await getSession();$("msg").textContent="Correct!";
-  if(index>=logos.length){await finish()}else show();
- }catch(e){$("msg").textContent=e.message}
- $("submit").disabled=false;
-}
-async function skip(){
- $("skip").disabled=true;
- try{
-  const r=await fetch("/api/round1/skip",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid,logoNo:logos[index].id})});
-  const d=await r.json();if(!r.ok)throw Error(d.error);
-  penalty=Number(d.totalPenalty);session=await getSession();syncServer(session.serverNow);
-  updateTimer();$("msg").textContent="+5 seconds penalty added";
-  index=d.count;
-  if(index>=logos.length){await finish()}else show();
- }catch(e){$("msg").textContent=e.message}
- $("skip").disabled=false;
-}
-async function finish(){
- clearInterval(displayInterval);
- const r=await fetch("/api/round1/finish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:sid})});
- const d=await r.json();if(!r.ok){$("msg").textContent=d.error;return}
- location.href=`round2.html?session=${encodeURIComponent(sid)}`;
-}
-$("start").onclick=start;$("submit").onclick=submitAnswer;$("skip").onclick=skip;
-$("answer").addEventListener("keydown",e=>{if(e.key==="Enter")submitAnswer()});
-document.addEventListener("visibilitychange",async()=>{if(!document.hidden&&session){try{session=await getSession();penalty=Number(session.round1Penalty||penalty);updateTimer()}catch{}}});
-resume();
+
+setInterval(checkTimeLimit,250);
+
+init();
+
+$("answer").addEventListener("keydown",e=>{
+    if(e.key==="Enter"){
+        $("submit").click();
+    }
+});

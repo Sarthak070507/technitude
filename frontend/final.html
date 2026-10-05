@@ -1,1 +1,27 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Final Treasure</title><link rel="stylesheet" href="css/style.css"></head><body class="game-bg"><main class="card wide"><p class="eyebrow">FINAL ROUND</p><h1>THE FINAL TREASURE</h1><p id="team"></p><div class="game-timer" id="timer">00:00.0</div><div id="question">Loading final challenge...</div><textarea id="answer" placeholder="Enter your final answer"></textarea><button id="submit">SUBMIT FINAL ANSWER</button><p id="msg"></p></main><script src="js/final.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hack the Hunt — Final Challenge</title><link rel="stylesheet" href="css/style.css"></head>
+<body class="game-bg final-page">
+<div class="stars"></div><main class="card wide final-card reveal">
+  <div class="topbar"><span class="round-badge">ROUND 3</span><span class="status-dot">● FINAL CHALLENGE</span></div>
+  <p class="eyebrow">THE TREASURE IS WITHIN REACH</p>
+  <h1>CLAIM THE ONE PIECE</h1>
+  <p id="crew" class="crew-label"></p>
+  <div class="timer-wrap"><span>FINAL ROUND TIME</span><div class="timer" id="timer">00:00.0</div></div>
+  <section id="finalIntro" class="final-challenge">
+    <div class="question-scroll">📜</div>
+    <h2>THE QUESTION FROM YOUR QR</h2>
+    <p class="final-instruction">You found the QR outside the website. Read the question it gave your crew, then enter only the answer below.</p>
+    <input id="answer" class="answer-input" placeholder="Enter the answer from the QR challenge" autocomplete="off">
+    <button id="submit" class="gold-btn">🏴‍☠️ SUBMIT ANSWER</button>
+    <p id="msg" class="message"></p>
+  </section>
+  <section id="treasure" hidden class="treasure-screen">
+    <div class="burst">✦</div><div class="treasure-icon">🏴‍☠️</div>
+    <p class="eyebrow">TREASURE FOUND</p><h2>THE ONE PIECE IS YOURS!</h2>
+    <p>Your crew conquered the final challenge.</p>
+    <div class="reward">☠ <strong>HACK THE HUNT COMPLETE</strong> ☠<br><span>The treasure has been claimed.</span></div>
+  </section>
+</main>
+<script src="js/timer.js"></script><script src="js/final.js"></script>
+</body></html>

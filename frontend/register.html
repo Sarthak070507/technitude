@@ -1,1 +1,45 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Join Crew</title><link rel="stylesheet" href="css/style.css"></head><body class="game-bg"><main class="card"><div class="skull">☠</div><p class="eyebrow">JOIN THE CREW</p><h1>ENTER YOUR TEAM</h1><input id="teamName" maxlength="100" placeholder="Team Name" autocomplete="off"><button id="enter">ENTER</button><p id="msg"></p></main><script src="js/register.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Hack the Hunt — Join the Crew</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-bg register-page">
+
+<video class="bg-video" autoplay muted loop playsinline>
+    <source src="images/registerbackground.mp4" type="video/mp4">
+</video>
+
+<main class="card reveal">
+
+    <div class="flag">
+        <img src="images/luffyskull.png" alt="Luffy Skull">
+    </div>
+
+    <p class="eyebrow">WELCOME ABOARD</p>
+
+    <h1>NAME YOUR CREW</h1>
+
+    <p class="subtle">Every legend needs a crew name.</p>
+
+    <input
+        id="teamName"
+        maxlength="100"
+        placeholder="Enter your crew name"
+        autocomplete="off"
+    >
+
+    <button id="enter" class="gold-btn">
+        ⚓ SET SAIL
+    </button>
+
+    <p id="msg" class="message"></p>
+
+</main>
+
+<script src="js/register.js"></script>
+
+</body>
+</html>

@@ -1,1 +1,22 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Round 2</title><link rel="stylesheet" href="css/style.css"></head><body class="game-bg"><main class="card"><p class="eyebrow">ROUND 2</p><h1>THE PHYSICAL CHALLENGE</h1><p id="team"></p><div class="game-timer" id="timer">00:00.0</div><p id="status">Waiting for the organizer to start Round 2...</p><div class="pirate-loader">⚓</div></main><script src="js/round2.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hack the Hunt — Round 2</title><link rel="stylesheet" href="css/style.css"></head>
+<body class="game-bg hunt-page">
+<div class="ocean-glow"></div><div class="ship-wheel">☸</div>
+<main class="card wide adventure-card reveal">
+  <div class="topbar"><span class="round-badge">ROUND 2</span><span class="status-dot">● LIVE HUNT</span></div>
+  <p class="eyebrow">THE GRAND LINE • TREASURE HUNT</p>
+  <h1>FOLLOW THE CLUE</h1>
+  <p id="crew" class="crew-label"></p>
+  <div class="timer-wrap"><span>HUNT TIME</span><div class="timer" id="timer">00:00.0</div></div>
+  <section class="map-card">
+    <div class="map-pin">⚓</div><p class="clue-label">YOUR LOCATION CLUE</p>
+    <div id="clue" class="clue-text">Loading your clue...</div>
+    <div class="map-line"></div><small>Use the clue in the real world. The website does not scan or handle the QR.</small>
+  </section>
+  <div class="hunt-note"><strong>THE HUNT LEAVES THE SCREEN NOW.</strong><br>Find the hidden QR using the clue. Scan it with your separate device and keep the question you receive.</div>
+  <button id="complete" class="gold-btn">⚔ ROUND 2 COMPLETED — START FINAL ROUND</button>
+  <p id="status" class="message">Your crew's hunt is underway.</p>
+</main>
+<script src="js/timer.js"></script><script src="js/round2.js"></script>
+</body></html>
